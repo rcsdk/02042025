@@ -1,0 +1,42 @@
+restore_session.sh
+
+#!/bin/bash
+# List available backups
+echo "Available backups:"
+ls -la /mnt/1/session/.session-store/backups/
+
+# Ask for timestamp
+read -p "Enter backup timestamp (e.g., 20250206_180850): " timestamp
+
+# Restore the selected backup
+if [ -d "/mnt/1/session/.session-store/backups/session_$timestamp" ]; then
+    cp -r /mnt/1/session/.session-store/backups/session_$timestamp/* /mnt/1/session/.session-store/
+    echo "Restored from backup $timestamp"
+else
+    echo "Backup not found!"
+fi
+
+
+
+recover_session.sh
+
+#!/bin/bash
+# Wait for USB to be recognized
+sleep 10
+
+# Check if previous session was interrupted
+if [ -f /mnt/1/session/.session-store/crash/recovering ]; then
+    # Restore from last known good state
+    cp -r /mnt/1/session/.session-store/crash/last_session/* /mnt/1/session/.session-store/
+    rm /mnt/1/session/.session-store/crash/recovering
+fi
+
+# Create crash marker for next boot
+touch /mnt/1/session/.session-store/crash/recovering
+chmod 644 /mnt/1/session/.session-store/crash/recovering
+
+# Update session links
+ln -sf /mnt/1/session/.session-store ~/.session-store
+ln -sf /mnt/1/session/.cache/sessions ~/.cache/sessions
+
+
